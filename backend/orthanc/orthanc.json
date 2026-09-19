@@ -1,0 +1,23 @@
+{
+  "Name": "NEURO-SYNAPSE Orthanc",
+  "RemoteAccessAllowed": true,
+  "AuthenticationEnabled": true,
+  "HttpPort": 8042,
+  "DicomPort": 4242,
+  "DicomAet": "NEUROSYNAPSE",
+  "StorageDirectory": "/var/lib/orthanc/db",
+  "IndexDirectory": "/var/lib/orthanc/db",
+  "HttpDescribeErrors": true,
+  "DicomWeb": {
+    "Enable": true,
+    "Root": "/dicom-web/",
+    "EnableWado": true,
+    "WadoRoot": "/wado",
+    "QidoCaseSensitive": false,
+    "StudiesMetadata": "Full",
+    "SeriesMetadata": "Full"
+  },
+  "OHIF": {
+    "DataSource": "dicom-web"
+  }
+}

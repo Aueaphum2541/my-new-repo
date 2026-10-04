@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#071b2b" />
+  <title>TH Flood Digital Twin | Thailand Flood & Storm Simulator</title>
+  <link rel="preconnect" href="https://tiles.openfreemap.org">
+  <link href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#06131f;--panel:rgba(7,25,39,.92);--panel2:rgba(10,34,52,.82);
+      --line:rgba(126,205,255,.17);--cyan:#67ddff;--blue:#4da3ff;--green:#55e6af;
+      --yellow:#ffd35a;--orange:#ff9a5b;--red:#ff637d;--text:#eaf7ff;--muted:#91afc2;
+    }
+    *{box-sizing:border-box} html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+    button,input,select{font:inherit}
+    #map{position:absolute;inset:0;background:#0b1a25}
+    #rainCanvas{position:absolute;inset:0;pointer-events:none;z-index:4}
+    .topbar{position:absolute;z-index:20;left:16px;right:16px;top:14px;height:62px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(90deg,rgba(5,24,38,.96),rgba(8,31,48,.86));backdrop-filter:blur(18px);display:flex;align-items:center;gap:14px;padding:10px 14px;box-shadow:0 14px 45px rgba(0,0,0,.26)}
+    .brand{display:flex;align-items:center;gap:11px;min-width:280px}
+    .logo{width:40px;height:40px;border-radius:12px;background:conic-gradient(from 180deg,#55e6af,#67ddff,#577dff,#55e6af);position:relative;box-shadow:0 0 28px rgba(103,221,255,.22)}
+    .logo:after{content:"TH";position:absolute;inset:3px;border-radius:10px;background:#071b2b;display:grid;place-items:center;font-weight:900;color:#bff5ff;letter-spacing:.5px}
+    .brand h1{font-size:15px;line-height:1.15;margin:0;letter-spacing:.4px}.brand span{font-size:11px;color:var(--muted)}
+    .top-tabs{display:flex;gap:6px;flex:1}.tab{border:1px solid transparent;background:transparent;color:#a8c4d4;padding:9px 12px;border-radius:10px;cursor:pointer}.tab.active{background:rgba(103,221,255,.12);border-color:rgba(103,221,255,.25);color:#eaffff}
+    .status-group{display:flex;gap:8px;align-items:center}.status-pill{font-size:11px;padding:7px 9px;border-radius:999px;background:rgba(85,230,175,.1);border:1px solid rgba(85,230,175,.22);color:#bdf9df;white-space:nowrap}.dot{display:inline-block;width:7px;height:7px;background:var(--green);border-radius:50%;margin-right:6px;box-shadow:0 0 12px var(--green)}
+    .panel{position:absolute;z-index:15;top:90px;bottom:128px;width:290px;border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(16px);border-radius:18px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.24)}
+    .left{left:16px}.right{right:16px;width:320px}.panel-scroll{height:100%;overflow:auto;padding:14px}.panel-scroll::-webkit-scrollbar{width:5px}.panel-scroll::-webkit-scrollbar-thumb{background:#23485e;border-radius:6px}
+    .section{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.07)}.section:last-child{border-bottom:0}
+    .section h3{font-size:11px;text-transform:uppercase;letter-spacing:1.3px;color:#7fb0c8;margin:0 0 10px}
+    .control-row{display:flex;gap:8px;margin:8px 0}.field{flex:1}.label{font-size:10px;color:#7f9dad;margin-bottom:5px}
+    select,input[type=range],input[type=text],input[type=password]{width:100%}
+    select,input[type=text],input[type=password]{background:#0b2638;border:1px solid #173d54;color:#e7f7ff;border-radius:10px;padding:9px 10px;outline:none}
+    input[type=range]{accent-color:#5fdfff}
+    .layer{display:flex;align-items:center;justify-content:space-between;padding:7px 0;font-size:12px;color:#c8e0ed}.switch{appearance:none;width:36px;height:20px;border-radius:20px;background:#17364a;position:relative;cursor:pointer;transition:.2s}.switch:after{content:"";position:absolute;width:14px;height:14px;left:3px;top:3px;border-radius:50%;background:#7e9bad;transition:.2s}.switch:checked{background:#167f9d}.switch:checked:after{left:19px;background:#c6f8ff}
+    .btn{border:1px solid #21526b;background:linear-gradient(180deg,#0c3650,#0a2a40);color:#dff7ff;border-radius:10px;padding:9px 10px;cursor:pointer}.btn:hover{border-color:#58b7df}.btn.primary{background:linear-gradient(180deg,#0e7895,#0b5f79);border-color:#2da8ca}.btn.full{width:100%}
+    .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.kpi{padding:10px;border-radius:12px;background:rgba(15,50,72,.6);border:1px solid rgba(111,196,240,.12)}.kpi b{display:block;font-size:17px;margin-top:4px}.kpi small{font-size:10px;color:#8aa9b9}
+    .source-card{padding:10px;border-radius:12px;border:1px solid rgba(120,190,224,.13);background:rgba(8,39,58,.58);margin-bottom:8px}.source-card .name{display:flex;justify-content:space-between;gap:10px;font-size:12px;font-weight:700}.source-card p{font-size:10.5px;color:#90adbc;line-height:1.45;margin:6px 0}.tag{font-size:9px;border-radius:8px;padding:3px 6px;background:rgba(85,230,175,.1);color:#8ef1c5;border:1px solid rgba(85,230,175,.18)}.tag.key{background:rgba(255,211,90,.1);color:#ffe594;border-color:rgba(255,211,90,.2)}
+    .alert-card{border:1px solid rgba(255,99,125,.28);background:linear-gradient(180deg,rgba(109,25,44,.38),rgba(56,18,31,.25));border-radius:14px;padding:11px}.alert-card .headline{font-size:12px;font-weight:800;color:#ffdbe2}.alert-card p{margin:6px 0 0;color:#e7b9c4;font-size:10.5px;line-height:1.45}
+    .bottom{position:absolute;z-index:16;left:16px;right:16px;bottom:14px;height:98px;border:1px solid var(--line);background:rgba(6,24,37,.94);border-radius:17px;backdrop-filter:blur(16px);padding:10px 14px;display:grid;grid-template-columns:190px 1fr 260px;gap:14px;align-items:center}
+    .yearBox .year{font-size:30px;font-weight:800;letter-spacing:-1px}.yearBox small{color:#88a9bc}
+    .timeline{position:relative;height:68px}.timeline input{position:absolute;left:0;right:0;bottom:4px}.coverage{height:30px;display:flex;align-items:flex-end;gap:3px}.cov{height:8px;border-radius:3px;background:#28495a;flex:1}.cov.active{background:#2e89a4}.cov.g{background:#55aee0}.cov.t{background:#52d1a3}
+    .legend{display:flex;gap:9px;font-size:9px;color:#87a7b8;margin-top:3px}.legend i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:3px}
+    .mini-chart{width:100%;height:58px;border-radius:10px;background:rgba(11,39,57,.45);overflow:hidden}
+    .center-badge{position:absolute;z-index:8;left:50%;top:92px;transform:translateX(-50%);padding:8px 12px;border-radius:999px;background:rgba(4,26,41,.8);border:1px solid rgba(103,221,255,.18);font-size:11px;color:#c7ecf9;backdrop-filter:blur(9px)}
+    .maplibregl-ctrl-bottom-left,.maplibregl-ctrl-bottom-right{display:none}
+    .maplibregl-ctrl-group{background:rgba(8,30,45,.9)!important;border:1px solid rgba(103,221,255,.18)!important}
+    .maplibregl-ctrl button .maplibregl-ctrl-icon{filter:invert(1)}
+    .modal{position:absolute;z-index:40;inset:0;background:rgba(0,8,14,.7);display:none;place-items:center;backdrop-filter:blur(8px)}.modal.show{display:grid}.modalBox{width:min(620px,calc(100% - 30px));background:#081e2e;border:1px solid #204c63;border-radius:18px;padding:18px;box-shadow:0 30px 100px rgba(0,0,0,.5)}.modalBox h2{font-size:18px;margin:0 0 7px}.modalBox p{font-size:12px;color:#8fb0c1;line-height:1.5}.api-row{display:grid;grid-template-columns:1fr auto;gap:8px;margin:10px 0}
+    .note{font-size:9.5px;color:#7e9daa;line-height:1.45}.sep{height:1px;background:rgba(255,255,255,.08);margin:12px 0}
+    .scenario-pill{display:inline-flex;align-items:center;gap:5px;font-size:9px;color:#ffdca0;background:rgba(255,154,91,.1);border:1px solid rgba(255,154,91,.22);padding:4px 7px;border-radius:999px}
+    @media(max-width:1050px){.right{display:none}.panel.left{width:260px}.bottom{right:16px;grid-template-columns:150px 1fr}.bottom .chartWrap{display:none}.top-tabs{display:none}}
+    @media(max-width:720px){.panel.left{top:auto;bottom:128px;left:10px;right:10px;width:auto;height:245px}.topbar{left:10px;right:10px}.status-group{display:none}.brand{min-width:0}.bottom{left:10px;right:10px;grid-template-columns:100px 1fr}.yearBox .year{font-size:22px}.center-badge{top:84px}}
+  </style>
+</head>
+<body>
+  <div id="map"></div><canvas id="rainCanvas"></canvas>
+  <div class="topbar">
+    <div class="brand"><div class="logo"></div><div><h1>TH FLOOD DIGITAL TWIN</h1><span>Thailand Flood • Storm • Historical Replay • 3D GIS</span></div></div>
+    <div class="top-tabs">
+      <button class="tab active" data-mode="live">Live</button>
+      <button class="tab" data-mode="history">History</button>
+      <button class="tab" data-mode="forecast">Forecast</button>
+      <button class="tab" data-mode="scenario">Scenario Lab</button>
+    </div>
+    <div class="status-group">
+      <div class="status-pill"><span class="dot"></span>TMD live endpoint</div>
+      <button class="btn" id="settingsBtn">API / Data</button>
+    </div>
+  </div>
+  <div class="center-badge" id="centerBadge">Bangkok • 3D flood scenario overlay</div>
+
+  <aside class="panel left">
+    <div class="panel-scroll">
+      <div class="section">
+        <h3>พื้นที่จำลอง / Area</h3>
+        <div class="field"><div class="label">Province</div><select id="provinceSelect"></select></div>
+        <div class="control-row">
+          <button class="btn full" id="locateBtn">Focus Province</button>
+          <button class="btn full" id="thaiBtn">Thailand View</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Simulation Controls</h3>
+        <div class="field"><div class="label">Rain intensity <b id="rainVal">68</b> mm/h</div><input id="rainRange" type="range" min="0" max="150" value="68"></div>
+        <div class="field"><div class="label">Water level offset <b id="waterVal">0.85</b> m</div><input id="waterRange" type="range" min="0" max="300" value="85"></div>
+        <div class="field"><div class="label">Storm movement <b id="windVal">38</b> km/h</div><input id="windRange" type="range" min="0" max="120" value="38"></div>
+        <div class="control-row"><button class="btn primary full" id="playBtn">▶ Play 24h</button><button class="btn full" id="resetBtn">Reset</button></div>
+        <div class="scenario-pill">Scenario values are simulations — not official measurements</div>
+      </div>
+
+      <div class="section">
+        <h3>Layers</h3>
+        <label class="layer">3D Buildings <input id="buildingsToggle" class="switch" type="checkbox" checked></label>
+        <label class="layer">Flood Surface <input id="floodToggle" class="switch" type="checkbox" checked></label>
+        <label class="layer">Rain / Storm FX <input id="rainToggle" class="switch" type="checkbox" checked></label>
+        <label class="layer">Live TMD Warnings <input id="tmdToggle" class="switch" type="checkbox" checked></label>
+        <label class="layer">GISTDA Flood Layer <input id="gistdaToggle" class="switch" type="checkbox"></label>
+        <label class="layer">Google Flood API <input id="googleToggle" class="switch" type="checkbox"></label>
+      </div>
+
+      <div class="section">
+        <h3>Historical Coverage</h3>
+        <div class="kpi-grid">
+          <div class="kpi"><small>GRRR discharge</small><b>1980–2023</b></div>
+          <div class="kpi"><small>Google inundation</small><b>1999–2020</b></div>
+          <div class="kpi"><small>TMD hydro records</small><b>from 2006</b></div>
+          <div class="kpi"><small>GISTDA catalog</small><b>2022+</b></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <aside class="panel right">
+    <div class="panel-scroll">
+      <div class="section">
+        <h3>Operational Snapshot</h3>
+        <div class="kpi-grid">
+          <div class="kpi"><small>Mode</small><b id="modeKpi">LIVE</b></div>
+          <div class="kpi"><small>Scenario depth</small><b id="depthKpi">0.85 m</b></div>
+          <div class="kpi"><small>Rain scenario</small><b id="rainKpi">68 mm/h</b></div>
+          <div class="kpi"><small>Data adapters</small><b id="adapterKpi">2 / 4</b></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Live Official Warning</h3>
+        <div class="alert-card">
+          <div class="headline" id="warningTitle">Connecting to TMD GTS…</div>
+          <p id="warningBody">กำลังดึงข้อมูลข่าวเตือนภัยจากศูนย์โทรคมนาคมอุตุนิยมวิทยา กรมอุตุนิยมวิทยา</p>
+        </div>
+        <button class="btn full" style="margin-top:8px" id="refreshTmdBtn">Refresh TMD</button>
+      </div>
+
+      <div class="section">
+        <h3>Real Data Sources</h3>
+        <div class="source-card"><div class="name"><span>TMD / GTS Thailand</span><span class="tag">LIVE</span></div><p>Weather warning, synoptic, METAR and upper-air REST endpoints.</p></div>
+        <div class="source-card"><div class="name"><span>GISTDA Disaster Platform</span><span class="tag key">API KEY</span></div><p>Flood polygons, STAC, WMS/WMTS/TMS and recurring-flood datasets.</p></div>
+        <div class="source-card"><div class="name"><span>DWR / Thaiwater Standard</span><span class="tag">OPEN DATA</span></div><p>Rainfall, runoff, gauge/station and water-source datasets published via data.go.th.</p></div>
+        <div class="source-card"><div class="name"><span>Google Flood Forecasting</span><span class="tag key">API KEY</span></div><p>Riverine forecast API, flash-flood search, GRRR 1980–2023 and inundation history 1999–2020.</p></div>
+      </div>
+
+      <div class="section">
+        <h3>Google Flood Hub</h3>
+        <button class="btn primary full" id="floodHubBtn">Open Flood Hub Thailand</button>
+        <p class="note">Google states riverine forecasts can extend up to 7 days and urban flash-flood forecasts up to 24 hours where coverage is available.</p>
+      </div>
+    </div>
+  </aside>
+
+  <div class="bottom">
+    <div class="yearBox"><small>Historical / Forecast Time</small><div class="year" id="yearLabel">2026</div><small id="timeLabel">LIVE • Oct 2026</small></div>
+    <div class="timeline">
+      <div class="coverage" id="coverage"></div>
+      <input id="yearRange" type="range" min="1980" max="2030" value="2026" step="1">
+      <div class="legend"><span><i style="background:#55aee0"></i>Google historical</span><span><i style="background:#52d1a3"></i>Thai agency data</span><span><i style="background:#2e89a4"></i>Forecast / scenario</span></div>
+    </div>
+    <div class="chartWrap"><small style="font-size:9px;color:#86a9bb">Scenario hydrograph — visualization only</small><canvas id="chart" class="mini-chart" width="500" height="116"></canvas></div>
+  </div>
+
+  <div class="modal" id="settingsModal">
+    <div class="modalBox">
+      <h2>Data connectors</h2>
+      <p>ตัว MVP นี้เชื่อม TMD แบบ public endpoint ได้ทันที ส่วน Google Flood Forecasting และ GISTDA ต้องใช้สิทธิ์/API key ตามที่ผู้ให้บริการกำหนด จึงไม่ฝังคีย์ไว้ใน public site</p>
+      <div class="sep"></div>
+      <div class="label">Google Flood Forecasting API key (stored only in this browser)</div>
+      <div class="api-row"><input id="googleKeyInput" type="password" placeholder="Paste Google Flood Forecasting API key"><button class="btn primary" id="saveGoogleKey">Save</button></div>
+      <div class="label">GISTDA API key (stored only in this browser)</div>
+      <div class="api-row"><input id="gistdaKeyInput" type="password" placeholder="Paste GISTDA API key"><button class="btn primary" id="saveGistdaKey">Save</button></div>
+      <div class="control-row"><button class="btn full" id="clearKeysBtn">Clear local keys</button><button class="btn full" id="closeModalBtn">Close</button></div>
+      <p class="note">Production recommendation: move secrets to Vercel Environment Variables + server-side proxy before public launch. Never expose private API keys in client JavaScript.</p>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+  <script>
+    const provinces = [
+      "กรุงเทพมหานคร","กระบี่","กาญจนบุรี","กาฬสินธุ์","กำแพงเพชร","ขอนแก่น","จันทบุรี","ฉะเชิงเทรา","ชลบุรี","ชัยนาท","ชัยภูมิ","ชุมพร","เชียงราย","เชียงใหม่","ตรัง","ตราด","ตาก","นครนายก","นครปฐม","นครพนม","นครราชสีมา","นครศรีธรรมราช","นครสวรรค์","นนทบุรี","นราธิวาส","น่าน","บึงกาฬ","บุรีรัมย์","ปทุมธานี","ประจวบคีรีขันธ์","ปราจีนบุรี","ปัตตานี","พระนครศรีอยุธยา","พังงา","พัทลุง","พิจิตร","พิษณุโลก","เพชรบุรี","เพชรบูรณ์","แพร่","พะเยา","ภูเก็ต","มหาสารคาม","มุกดาหาร","แม่ฮ่องสอน","ยโสธร","ยะลา","ร้อยเอ็ด","ระนอง","ระยอง","ราชบุรี","ลพบุรี","ลำปาง","ลำพูน","เลย","ศรีสะเกษ","สกลนคร","สงขลา","สตูล","สมุทรปราการ","สมุทรสงคราม","สมุทรสาคร","สระแก้ว","สระบุรี","สิงห์บุรี","สุโขทัย","สุพรรณบุรี","สุราษฎร์ธานี","สุรินทร์","หนองคาย","หนองบัวลำภู","อ่างทอง","อำนาจเจริญ","อุดรธานี","อุตรดิตถ์","อุทัยธานี","อุบลราชธานี"
+    ];
+
+    const preset = {
+      "กรุงเทพมหานคร":[100.5018,13.7563,11.2],"เชียงใหม่":[98.9853,18.7883,10.8],"เชียงราย":[99.8406,19.9105,10.8],
+      "พระนครศรีอยุธยา":[100.565,14.353,11.5],"นครสวรรค์":[100.137,15.704,10.9],"พิษณุโลก":[100.263,16.821,11.1],
+      "ขอนแก่น":[102.835,16.432,10.9],"นครราชสีมา":[102.101,14.979,10.7],"อุบลราชธานี":[104.857,15.244,10.7],
+      "อุดรธานี":[102.787,17.413,10.7],"หนองคาย":[102.744,17.878,11],"สุโขทัย":[99.823,17.006,11],
+      "กาญจนบุรี":[99.532,14.022,10.6],"ชลบุรี":[100.984,13.361,10.8],"ระยอง":[101.281,12.681,10.8],
+      "จันทบุรี":[102.104,12.611,10.6],"ตราด":[102.515,12.243,10.6],"หัวหิน":[99.958,12.568,10.8],
+      "สุราษฎร์ธานี":[99.333,9.138,10.4],"นครศรีธรรมราช":[99.967,8.431,10.5],"ภูเก็ต":[98.392,7.880,11],
+      "สงขลา":[100.595,7.198,10.6],"ปัตตานี":[101.25,6.87,10.7],"ยะลา":[101.279,6.541,10.7],"นราธิวาส":[101.823,6.426,10.5],
+      "ตาก":[99.129,16.884,10.4],"แม่ฮ่องสอน":[97.966,19.302,10.2],"ลำปาง":[99.492,18.292,10.7],"น่าน":[100.783,18.775,10.5]
+    };
+
+    let state = {province:"กรุงเทพมหานคร", center:[100.5018,13.7563], mode:"live", rain:68, water:.85, wind:38, playing:false, hour:0};
+    let floodVisible = true, rainVisible = true, buildingsVisible = true;
+    let map, floodGeoJSON, tmdWarningCache = null;
+
+    const $ = id => document.getElementById(id);
+    provinces.forEach(p=>{const o=document.createElement("option");o.value=p;o.textContent=p; $("provinceSelect").appendChild(o)});
+
+    map = new maplibregl.Map({
+      container:"map",
+      style:"https://tiles.openfreemap.org/styles/liberty",
+      center:state.center, zoom:11.2, pitch:58, bearing:-18, antialias:true
+    });
+    map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),"bottom-right");
+    map.on("load",()=>{ add3DBuildings(); addFloodLayer(); addProvinceMarker(); });
+
+    function add3DBuildings(){
+      try{
+        const s = map.getStyle(); 
+        let sourceId = s.sources["openmaptiles"] ? "openmaptiles" : Object.keys(s.sources).find(k=>s.sources[k].type==="vector");
+        if(!sourceId) return;
+        const layers = s.layers || [];
+        const labelLayer = layers.find(l=>l.type==="symbol" && l.layout && l.layout["text-field"]);
+        if(!map.getLayer("th-3d-buildings")){
+          map.addLayer({
+            id:"th-3d-buildings",source:sourceId,"source-layer":"building",type:"fill-extrusion",minzoom:14,
+            paint:{
+              "fill-extrusion-color":["interpolate",["linear"],["get","render_height"],0,"#16384d",80,"#2d7091",180,"#6bbdd1"],
+              "fill-extrusion-height":["coalesce",["get","render_height"],["get","height"],8],
+              "fill-extrusion-base":["coalesce",["get","render_min_height"],0],
+              "fill-extrusion-opacity":0.78
+            }
+          },labelLayer && labelLayer.id);
+        }
+      }catch(e){console.warn("3D buildings unavailable",e)}
+    }
+
+    function circlePoly(center, radiusKm, steps=72){
+      const [lng,lat]=center, coords=[];
+      for(let i=0;i<=steps;i++){const a=i/steps*Math.PI*2;const dx=Math.cos(a)*radiusKm/(111*Math.cos(lat*Math.PI/180));const dy=Math.sin(a)*radiusKm/111;coords.push([lng+dx,lat+dy])}
+      return coords;
+    }
+    function buildFloodData(){
+      const r1=1.1+state.rain/45+state.water*1.1, r2=r1*1.65, r3=r1*2.2;
+      return {type:"FeatureCollection",features:[
+        {type:"Feature",properties:{depth:state.water+0.4,band:"high"},geometry:{type:"Polygon",coordinates:[circlePoly(state.center,r1)]}},
+        {type:"Feature",properties:{depth:state.water+0.15,band:"mid"},geometry:{type:"Polygon",coordinates:[circlePoly([state.center[0]+.018,state.center[1]-.012],r2)]}},
+        {type:"Feature",properties:{depth:Math.max(.05,state.water-.15),band:"low"},geometry:{type:"Polygon",coordinates:[circlePoly([state.center[0]-.026,state.center[1]+.016],r3)]}}
+      ]};
+    }
+    function addFloodLayer(){
+      floodGeoJSON=buildFloodData();
+      if(map.getSource("scenario-flood")) map.getSource("scenario-flood").setData(floodGeoJSON);
+      else{
+        map.addSource("scenario-flood",{type:"geojson",data:floodGeoJSON});
+        map.addLayer({id:"scenario-flood-fill",type:"fill",source:"scenario-flood",paint:{
+          "fill-color":["match",["get","band"],"high","#268cff","mid","#35b9e7","#67dbe4"],
+          "fill-opacity":["interpolate",["linear"],["get","depth"],0,.08,3,.46]
+        }});
+        map.addLayer({id:"scenario-flood-line",type:"line",source:"scenario-flood",paint:{"line-color":"#87ecff","line-width":1.2,"line-opacity":.68}});
+      }
+    }
+    function addProvinceMarker(){
+      if(map.getSource("focus-point")) return;
+      map.addSource("focus-point",{type:"geojson",data:{type:"Feature",geometry:{type:"Point",coordinates:state.center},properties:{}}});
+      map.addLayer({id:"focus-ring",type:"circle",source:"focus-point",paint:{"circle-radius":8,"circle-color":"#ffb35f","circle-stroke-width":3,"circle-stroke-color":"#fff0cf"}});
+    }
+    function updateFocusSource(){if(map.getSource("focus-point"))map.getSource("focus-point").setData({type:"Feature",geometry:{type:"Point",coordinates:state.center},properties:{}})}
+
+    async function geocodeProvince(name){
+      if(preset[name]) return preset[name];
+      try{
+        const q=encodeURIComponent(name+" Thailand");
+        const r=await fetch("https://photon.komoot.io/api/?limit=1&q="+q);
+        const j=await r.json();
+        if(j.features && j.features[0]) return [...j.features[0].geometry.coordinates,10.4];
+      }catch(e){}
+      return [100.5018,13.7563,10.3];
+    }
+
+    async function focusProvince(){
+      const name=$("provinceSelect").value; state.province=name;
+      const [lng,lat,z]=await geocodeProvince(name); state.center=[lng,lat];
+      map.flyTo({center:state.center,zoom:z||10.6,pitch:58,bearing:-18,duration:1700});
+      updateFocusSource(); addFloodLayer(); updateUI();
+    }
+
+    function thailandView(){map.flyTo({center:[101.0,13.2],zoom:5.2,pitch:35,bearing:0,duration:1800});$("centerBadge").textContent="Thailand • National multi-source flood intelligence view"}
+
+    function updateUI(){
+      $("rainVal").textContent=state.rain; $("waterVal").textContent=state.water.toFixed(2); $("windVal").textContent=state.wind;
+      $("rainKpi").textContent=state.rain+" mm/h"; $("depthKpi").textContent=state.water.toFixed(2)+" m"; $("modeKpi").textContent=state.mode.toUpperCase();
+      $("centerBadge").textContent=state.province+" • "+state.mode.toUpperCase()+" • 3D flood scenario overlay";
+      addFloodLayer(); drawChart();
+    }
+
+    document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
+      document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active")); b.classList.add("active"); state.mode=b.dataset.mode; updateUI();
+      if(state.mode==="forecast") $("yearRange").value=2027; else if(state.mode==="history") $("yearRange").value=2011; else $("yearRange").value=2026; updateYear();
+    });
+
+    $("provinceSelect").value=state.province; $("locateBtn").onclick=focusProvince; $("thaiBtn").onclick=thailandView;
+    $("rainRange").oninput=e=>{state.rain=+e.target.value;updateUI()}; $("waterRange").oninput=e=>{state.water=+e.target.value/100;updateUI()}; $("windRange").oninput=e=>{state.wind=+e.target.value;updateUI()};
+    $("resetBtn").onclick=()=>{state.rain=68;state.water=.85;state.wind=38;state.hour=0;$("rainRange").value=68;$("waterRange").value=85;$("windRange").value=38;updateUI()};
+    $("playBtn").onclick=()=>{state.playing=!state.playing;$("playBtn").textContent=state.playing?"❚❚ Pause":"▶ Play 24h"};
+    setInterval(()=>{if(!state.playing)return;state.hour=(state.hour+1)%25;state.water=Math.max(.1,0.45+Math.sin((state.hour-5)/24*Math.PI)*1.6+(state.rain/150)*.45);$("waterRange").value=Math.min(300,Math.round(state.water*100));updateUI();$("timeLabel").textContent="Forecast playback • +"+state.hour+"h"},900);
+
+    $("buildingsToggle").onchange=e=>{buildingsVisible=e.target.checked;if(map.getLayer("th-3d-buildings"))map.setLayoutProperty("th-3d-buildings","visibility",buildingsVisible?"visible":"none")};
+    $("floodToggle").onchange=e=>{floodVisible=e.target.checked;["scenario-flood-fill","scenario-flood-line"].forEach(id=>{if(map.getLayer(id))map.setLayoutProperty(id,"visibility",floodVisible?"visible":"none")})};
+    $("rainToggle").onchange=e=>{rainVisible=e.target.checked};
+
+    function updateYear(){
+      const y=+$("yearRange").value;$("yearLabel").textContent=y;
+      let txt="Data coverage view";
+      if(y<=2023&&y>=1980)txt="Google GRRR historical discharge window";
+      if(y>=2006&&y<=2026)txt+=" • TMD hydro-era data available";
+      if(y>=2027)txt="Future scenario / forecast architecture";
+      $("timeLabel").textContent=txt; drawChart();
+    }
+    $("yearRange").oninput=updateYear;
+
+    function buildCoverage(){
+      const c=$("coverage"); c.innerHTML="";
+      for(let y=1980;y<=2030;y++){
+        const d=document.createElement("div");d.className="cov";
+        if(y<=2023)d.classList.add("g"); if(y>=2006&&y<=2026)d.classList.add("t"); if(y>=2024)d.classList.add("active");
+        d.title=String(y);c.appendChild(d);
+      }
+    }
+    buildCoverage(); updateYear();
+
+    function drawChart(){
+      const cv=$("chart"),ctx=cv.getContext("2d"),w=cv.width,h=cv.height;ctx.clearRect(0,0,w,h);
+      ctx.strokeStyle="rgba(117,185,216,.16)";ctx.lineWidth=1;for(let i=1;i<4;i++){ctx.beginPath();ctx.moveTo(0,h*i/4);ctx.lineTo(w,h*i/4);ctx.stroke()}
+      const year=+$("yearRange").value; const seed=(year%17)+state.rain*.05+state.water*2;
+      ctx.beginPath(); for(let i=0;i<48;i++){const v=.25+.23*Math.sin((i+seed)*.26)+.12*Math.sin((i+seed)*.72)+(state.rain/150)*.18;const x=i/(47)*w,y=h-(Math.max(.08,Math.min(.95,v))*h);i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+      const grad=ctx.createLinearGradient(0,0,w,0);grad.addColorStop(0,"#55e6af");grad.addColorStop(.6,"#67ddff");grad.addColorStop(1,"#ff9a5b");ctx.strokeStyle=grad;ctx.lineWidth=3;ctx.stroke();
+    }
+    drawChart();
+
+    const canvas=$("rainCanvas"),ctxR=canvas.getContext("2d"); let drops=[];
+    function resizeRain(){canvas.width=innerWidth*devicePixelRatio;canvas.height=innerHeight*devicePixelRatio;canvas.style.width=innerWidth+"px";canvas.style.height=innerHeight+"px";ctxR.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);drops=Array.from({length:160},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,l:8+Math.random()*18,s:5+Math.random()*11}))}
+    addEventListener("resize",resizeRain);resizeRain();
+    function rainLoop(){ctxR.clearRect(0,0,innerWidth,innerHeight);if(rainVisible && state.rain>10){ctxR.strokeStyle="rgba(155,220,255,"+(0.08+state.rain/900)+")";ctxR.lineWidth=1;ctxR.beginPath();const drift=state.wind/35;drops.forEach(d=>{ctxR.moveTo(d.x,d.y);ctxR.lineTo(d.x-drift,d.y+d.l);d.y+=d.s;d.x-=drift*.25;if(d.y>innerHeight){d.y=-20;d.x=Math.random()*innerWidth}});ctxR.stroke()}requestAnimationFrame(rainLoop)}
+    rainLoop();
+
+    async function fetchTMD(){
+      const title=$("warningTitle"),body=$("warningBody");title.textContent="Connecting to TMD GTS…";body.textContent="Fetching official weather warning endpoint.";
+      try{
+        const r=await fetch("https://telecom.tmd.go.th/api/ftp/warning",{cache:"no-store"});
+        if(!r.ok)throw new Error("HTTP "+r.status);
+        const j=await r.json();tmdWarningCache=j;
+        let items=Array.isArray(j)?j:(j.data||j.results||j.items||[]);
+        const first=items[0]||j;
+        const raw=(first.message||first.text||first.content||first.raw||first.bulletin||JSON.stringify(first)).replace(/\s+/g," ").slice(0,420);
+        title.textContent=items.length?"TMD warning feed • "+items.length+" bulletin(s)":"TMD warning endpoint online";
+        body.textContent=raw&&raw!=="{}"?raw:"Endpoint responded successfully; no warning bulletin text was returned.";
+      }catch(e){
+        title.textContent="TMD endpoint unavailable from this browser";
+        body.textContent="The official endpoint is configured, but CORS/network policy may block direct browser access. Production version should proxy this through a Vercel server function.";
+      }
+    }
+    fetchTMD(); $("refreshTmdBtn").onclick=fetchTMD;
+
+    async function queryGoogleFlood(){
+      const key=localStorage.getItem("thdt_google_flood_key");
+      if(!key){$("warningTitle").textContent="Google Flood API key required";$("warningBody").textContent="Open API/Data and add your approved Flood Forecasting API key. Flood Hub itself remains available via the button below.";return}
+      try{
+        const r=await fetch("https://floodforecasting.googleapis.com/v1/flashFloods:search?key="+encodeURIComponent(key),{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({countryCodes:["TH"],pageSize:100})});
+        const j=await r.json(); if(!r.ok)throw new Error(j.error?.message||"API error");
+        const n=(j.flashFloodEvents||j.flashFloods||[]).length;
+        $("warningTitle").textContent="Google flash-flood forecast • Thailand";
+        $("warningBody").textContent=n+" active/forecast event(s) returned by the Google Flood Forecasting API.";
+      }catch(e){$("warningTitle").textContent="Google Flood API error";$("warningBody").textContent=e.message}
+    }
+    $("googleToggle").onchange=e=>{if(e.target.checked)queryGoogleFlood();else fetchTMD()};
+
+    $("gistdaToggle").onchange=e=>{
+      if(e.target.checked){
+        const k=localStorage.getItem("thdt_gistda_key");
+        $("warningTitle").textContent=k?"GISTDA connector key loaded":"GISTDA API key required";
+        $("warningBody").textContent=k?"Key is stored locally. The production proxy should call GISTDA STAC/WMS services server-side and render official flood polygons.":"Open API/Data to save a GISTDA key. This MVP does not expose keys in public JavaScript.";
+      } else fetchTMD();
+    };
+
+    $("floodHubBtn").onclick=()=>window.open("https://sites.research.google/floods/","_blank","noopener");
+    $("settingsBtn").onclick=()=>{$("settingsModal").classList.add("show");$("googleKeyInput").value=localStorage.getItem("thdt_google_flood_key")||"";$("gistdaKeyInput").value=localStorage.getItem("thdt_gistda_key")||""};
+    $("closeModalBtn").onclick=()=>$("settingsModal").classList.remove("show");
+    $("settingsModal").onclick=e=>{if(e.target===$("settingsModal"))$("settingsModal").classList.remove("show")};
+    $("saveGoogleKey").onclick=()=>{localStorage.setItem("thdt_google_flood_key",$("googleKeyInput").value.trim());$("adapterKpi").textContent="3 / 4";$("googleToggle").checked=true;queryGoogleFlood()};
+    $("saveGistdaKey").onclick=()=>{localStorage.setItem("thdt_gistda_key",$("gistdaKeyInput").value.trim());$("adapterKpi").textContent=(localStorage.getItem("thdt_google_flood_key")?"4 / 4":"3 / 4")};
+    $("clearKeysBtn").onclick=()=>{localStorage.removeItem("thdt_google_flood_key");localStorage.removeItem("thdt_gistda_key");$("googleKeyInput").value="";$("gistdaKeyInput").value="";$("adapterKpi").textContent="2 / 4"};
+
+    updateUI();
+  </script>
+</body>
+</html>

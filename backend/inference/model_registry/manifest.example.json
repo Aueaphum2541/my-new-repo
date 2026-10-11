@@ -1,0 +1,14 @@
+{
+  "packageId": "replace-with-approved-package-id",
+  "modelVersion": "0.0.0",
+  "validationId": "replace-with-traceable-validation-record-id",
+  "validationStatus": "NOT_INSTALLED",
+  "intendedUse": "Non-contrast head CT ICH triage and CTA aneurysm candidate detection",
+  "weights": {
+    "ich": { "path": "ich.onnx", "sha256": "REPLACE" },
+    "aneurysm": { "path": "aneurysm.onnx", "sha256": "REPLACE" }
+  },
+  "preprocessingContract": "REPLACE_WITH_VERSIONED_PREPROCESSING_SPEC",
+  "approvedBy": "REPLACE",
+  "approvedAt": "REPLACE"
+}

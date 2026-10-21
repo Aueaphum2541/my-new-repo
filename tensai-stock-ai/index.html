@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="th" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="theme-color" content="#0b1220" />
+<title>Tensai US Stock AI Terminal</title>
+<meta name="description" content="US stock technical decision-support terminal with automatic EMA, RSI, MACD, support/resistance and THB position sizing." />
+<script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<main class="app">
+  <header class="top">
+    <div class="brand"><div class="logo">T</div><div><h1>Tensai US Stock AI Terminal</h1><p id="subtitle">ระบบช่วยตัดสินใจหุ้นสหรัฐฯ พร้อมกราฟอัตโนมัติและคำนวณขนาดการลงทุน</p></div></div>
+    <div class="top-actions">
+      <div class="pill status"><span id="statusDot" class="dot"></span><span id="statusText">กำลังเชื่อมข้อมูล</span></div>
+      <button class="btn" id="langBtn">EN</button>
+      <button class="btn" id="themeBtn">☀︎ White</button>
+    </div>
+  </header>
+
+  <section class="search-row">
+    <div><input class="input" id="search" value="AAPL" autocomplete="off" aria-label="Search US stock" /><div class="suggest" id="suggest"></div></div>
+    <select class="select" id="interval"><option value="1m">1m</option><option value="5m">5m</option><option value="15m" selected>15m</option><option value="1h">1H</option><option value="1d">1D</option></select>
+    <button class="btn" id="refreshBtn">↻ Refresh</button>
+  </section>
+
+  <section class="hero">
+    <div class="panel price-panel">
+      <div class="quote-head">
+        <div class="symbol"><h2 id="symbolTitle">AAPL</h2><p id="symbolMeta">Apple · NASDAQ</p></div>
+        <div class="price-wrap"><div class="price" id="lastPrice">—</div><div class="chg" id="change">—</div></div>
+      </div>
+      <div class="mini-grid">
+        <div class="mini"><span>EMA 20</span><b id="mE20">—</b></div><div class="mini"><span>EMA 50</span><b id="mE50">—</b></div><div class="mini"><span>RSI 14</span><b id="mRsi">—</b></div><div class="mini"><span>MACD</span><b id="mMacd">—</b></div><div class="mini"><span>ATR 14</span><b id="mAtr">—</b></div>
+      </div>
+    </div>
+    <div class="panel decision">
+      <div>
+        <div class="decision-top"><div><h3 id="decisionLabel">ควรทำอะไรต่อ?</h3><div class="signal" id="signal">กำลังวิเคราะห์…</div></div><div class="score" id="score">—</div></div>
+        <p class="decision-text" id="decisionText">ระบบกำลังดู Trend, Momentum, RSI, MACD, Volume, แนวรับและแนวต้านให้โดยอัตโนมัติ</p>
+      </div>
+      <div class="next"><b id="nextTitle">ขั้นตอนถัดไป</b><p id="nextText">รอข้อมูลตลาด</p></div>
+    </div>
+  </section>
+
+  <section class="chart-grid">
+    <div class="charts">
+      <div class="panel chart-card">
+        <div class="chart-title"><span id="mainChartTitle">กราฟราคา + EMA + Bollinger + แนวรับ/แนวต้าน + Entry/Stop/TP</span><div class="legend"><span class="lg"><i class="sw ema20"></i>EMA20</span><span class="lg"><i class="sw ema50"></i>EMA50</span><span class="lg"><i class="sw bb"></i>Bollinger</span><span class="lg"><i class="sw sr"></i>S/R</span></div></div>
+        <div class="chart-wrap"><div id="priceChart"></div><div id="loader" class="loader"><div class="spin"></div></div></div>
+      </div>
+      <div class="panel chart-card"><div class="chart-title"><span>RSI 14 · Oversold 30 / Overbought 70</span><span id="rsiState">—</span></div><div id="rsiChart" class="osc"></div></div>
+      <div class="panel chart-card"><div class="chart-title"><span>MACD 12/26/9</span><span id="macdState">—</span></div><div id="macdChart" class="osc"></div></div>
+    </div>
+
+    <aside class="sidebar">
+      <div class="panel side-card"><h3 id="planTitle">แผนราคาอัตโนมัติ</h3><div class="levels">
+        <div class="level"><span>แนวรับ</span><b id="support">—</b></div><div class="level"><span>แนวต้าน</span><b id="resistance">—</b></div>
+        <div class="level"><span>จุดเข้า</span><b id="entry">—</b></div><div class="level"><span>Stop</span><b id="stop">—</b></div>
+        <div class="level"><span>Take Profit 1</span><b id="tp1">—</b></div><div class="level"><span>Take Profit 2</span><b id="tp2">—</b></div>
+      </div></div>
+
+      <div class="panel side-card"><h3 id="whyTitle">ทำไมระบบถึงแนะนำแบบนี้</h3><div class="reason-list" id="reasons"></div></div>
+
+      <div class="panel side-card"><h3 id="fxTitle">USD ↔ THB</h3><div class="fxbox"><div class="fx"><span>1 USD</span><b id="fxRate">— THB</b></div><div class="fx"><span id="positionFxLabel">มูลค่าหุ้นแนะนำ</span><b id="positionFx">—</b></div></div><div class="smallnote" id="fxSource">กำลังโหลดอัตราแลกเปลี่ยน…</div></div>
+
+      <div class="panel side-card"><h3 id="sizeTitle">ควรซื้อกี่หุ้น?</h3><div class="calc">
+        <div class="field"><label id="capitalLabel">เงินลงทุนทั้งหมด (THB)</label><input id="capital" type="number" min="1000" step="1000" value="100000" /></div>
+        <div class="row2"><div class="field"><label id="riskLabel">เสี่ยงต่อดีล (%)</label><input id="riskPct" type="number" min="0.1" max="5" step="0.1" value="1" /></div><div class="field"><label id="allocLabel">ใช้เงินสูงสุด (%)</label><input id="allocPct" type="number" min="5" max="100" step="5" value="25" /></div></div>
+        <div class="position-result"><div class="position-big" id="shares">— หุ้น</div><div class="position-sub" id="positionDetail">ระบบจะจำกัดทั้ง “ความเสี่ยงจาก Stop” และ “สัดส่วนเงินลงทุนสูงสุด” แล้วเลือกจำนวนที่ต่ำกว่า</div><div class="allocation"><div id="allocBar"></div></div></div>
+      </div><div class="smallnote" id="sizeNote">ค่าเริ่มต้น 1% risk / 25% allocation เป็นตัวอย่างเพื่อช่วยจัดการความเสี่ยง คุณเปลี่ยนได้ตามแผนของคุณ</div></div>
+    </aside>
+  </section>
+  <div class="foot" id="disclaimer">สัญญาณทั้งหมดเป็นระบบวิเคราะห์เชิงเทคนิคเพื่อช่วยตัดสินใจ ไม่ใช่การรับประกันผลตอบแทนหรือคำสั่งซื้อขายเฉพาะบุคคล ข้อมูล Yahoo Finance อาจเป็น near-real-time หรือมี delay ตามตลาด/สิทธิ์ข้อมูล</div>
+</main>
+<script src="/app.js"></script>
+</body></html>

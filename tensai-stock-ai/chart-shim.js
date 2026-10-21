@@ -90,4 +90,6 @@ function draw(chart){
 }
 window.__TensaiNativeLightweightCharts=window.LightweightCharts||null;window.LightweightCharts={CrosshairMode:{Normal:0},createChart};window.__TensaiChartEngine='canvas-interactive-v2';
 window.addEventListener('resize',()=>charts.forEach(schedule));document.addEventListener('click',e=>{if(e.target?.closest?.('.tab'))setTimeout(()=>charts.forEach(schedule),50)});document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>charts.forEach(schedule),50)});
+function injectLang(){if(document.querySelector('script[data-tensai-lang-patch]'))return;const s=document.createElement('script');s.src='/lang-patch.js?v=2';s.dataset.tensaiLangPatch='1';document.head.appendChild(s)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',injectLang,{once:true});else injectLang();
 })();

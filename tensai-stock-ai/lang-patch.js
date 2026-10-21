@@ -29,11 +29,12 @@ function applyFullLang(lang){
  window.__tensaiCharts?.forEach(c=>c.render?.());
 }
 window.__applyTensaiFullLanguage=applyFullLang;
+function loadV5(){if(document.querySelector('script[data-tensai-v5]'))return;const s=document.createElement('script');s.src='/v5-patch.js?v=5.0.1';s.dataset.tensaiV5='1';document.head.appendChild(s)}
 let booted=false;
 function boot(){if(booted)return;booted=true;
  setTimeout(()=>{let lang='th';try{lang=JSON.parse(localStorage.getItem('tensai-lang'))||'th'}catch{};applyFullLang(lang)},120);
  const b=document.getElementById('langBtn');if(b)b.addEventListener('click',()=>setTimeout(()=>{let lang='th';try{lang=JSON.parse(localStorage.getItem('tensai-lang'))||'th'}catch{};applyFullLang(lang)},50));
- let busy=false;const obs=new MutationObserver(()=>{if(busy||!window.__tensaiLang)return;busy=true;requestAnimationFrame(()=>{applyFullLang(window.__tensaiLang);busy=false})});setTimeout(()=>obs.observe(document.querySelector('main')||document.body,{childList:true,subtree:true}),600);
+ let busy=false;const obs=new MutationObserver(()=>{if(busy||!window.__tensaiLang)return;busy=true;requestAnimationFrame(()=>{applyFullLang(window.__tensaiLang);busy=false})});setTimeout(()=>obs.observe(document.querySelector('main')||document.body,{childList:true,subtree:true}),600);loadV5();
 }
 if(document.readyState==='loading')window.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();

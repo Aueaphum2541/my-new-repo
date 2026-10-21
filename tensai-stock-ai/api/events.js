@@ -6,9 +6,9 @@ async function getDate(date){
   }catch{return[]}
 }
 export default async function handler(req,res){
-  const d=new Date(),dates=[];for(let i=0;i<3;i++){const x=new Date(d.getTime()+i*86400000);dates.push(x.toISOString().slice(0,10))}
+  const d=new Date(),dates=[];for(let i=0;i<5;i++){const x=new Date(d.getTime()+i*86400000);dates.push(x.toISOString().slice(0,10))}
   const all=[];for(const dt of dates)all.push(...await getDate(dt));
-  const key=/FOMC|Federal Reserve|Fed |CPI|Consumer Price|PCE|GDP|Nonfarm|Payroll|Unemployment|Jobs|Retail Sales|ISM|PMI/i;
-  const important=all.filter(x=>key.test(x.event)).slice(0,20);
+  const key=/FOMC|Federal Reserve|Fed |CPI|Consumer Price|PCE|GDP|Nonfarm|Payroll|Unemployment|Jobless|Jobs|Retail Sales|ISM|PMI|Durable Goods|Personal Income|Personal Spending/i;
+  const important=all.filter(x=>(/United States|USA|U\.S\./i.test(x.country)||/Federal Reserve|FOMC|Fed /i.test(x.event))&&key.test(x.event)).slice(0,20);
   res.setHeader('Cache-Control','s-maxage=900, stale-while-revalidate=1800');res.status(200).json({events:important,source:'Nasdaq economic calendar',dates});
 }

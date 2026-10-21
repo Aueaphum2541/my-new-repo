@@ -1,0 +1,1 @@
+Chart interaction patch marker for V4.2. Scroll/pinch zoom, drag pan, double-click reset, Thai/English UI translation.

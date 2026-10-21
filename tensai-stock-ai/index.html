@@ -1,79 +1,188 @@
 <!doctype html>
 <html lang="th" data-theme="dark">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="theme-color" content="#0b1220" />
-<title>Tensai US Stock AI Terminal</title>
-<meta name="description" content="US stock technical decision-support terminal with automatic EMA, RSI, MACD, support/resistance and THB position sizing." />
-<script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
-<link rel="stylesheet" href="/styles.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#08111f" />
+  <title>Tensai AI Trading Decision Terminal V4</title>
+  <meta name="description" content="US stock decision-support terminal with multi-timeframe analysis, risk sizing, portfolio analytics, scanner, paper trading and THB returns." />
+  <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-<main class="app">
-  <header class="top">
-    <div class="brand"><div class="logo">T</div><div><h1>Tensai US Stock AI Terminal</h1><p id="subtitle">ระบบช่วยตัดสินใจหุ้นสหรัฐฯ พร้อมกราฟอัตโนมัติและคำนวณขนาดการลงทุน</p></div></div>
+<div class="app-shell">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">T</div>
+      <div>
+        <h1>Tensai AI Trading Decision Terminal <span>V4</span></h1>
+        <p id="subtitle">สรุปสิ่งที่ควรทำต่อจากราคา แนวโน้ม ความเสี่ยง ข่าว และพอร์ตในหน้าจอเดียว</p>
+      </div>
+    </div>
     <div class="top-actions">
-      <div class="pill status"><span id="statusDot" class="dot"></span><span id="statusText">กำลังเชื่อมข้อมูล</span></div>
-      <button class="btn" id="langBtn">EN</button>
-      <button class="btn" id="themeBtn">☀︎ White</button>
+      <div class="status-chip"><i id="statusDot"></i><span id="statusText">กำลังโหลดตลาด</span></div>
+      <button class="ghost" id="langBtn">EN</button>
+      <button class="ghost" id="themeBtn">☀ White</button>
     </div>
   </header>
 
-  <section class="search-row">
-    <div><input class="input" id="search" value="AAPL" autocomplete="off" aria-label="Search US stock" /><div class="suggest" id="suggest"></div></div>
-    <select class="select" id="interval"><option value="1m">1m</option><option value="5m">5m</option><option value="15m" selected>15m</option><option value="1h">1H</option><option value="1d">1D</option></select>
-    <button class="btn" id="refreshBtn">↻ Refresh</button>
+  <section class="commandbar panel">
+    <div class="search-wrap">
+      <input id="search" class="control search" value="AAPL" autocomplete="off" aria-label="Search US stock" />
+      <div id="suggest" class="suggest"></div>
+    </div>
+    <select id="interval" class="control compact">
+      <option value="5m">5m</option><option value="15m" selected>15m</option><option value="1h">1H</option><option value="4h">4H</option><option value="1d">1D</option><option value="1w">1W</option>
+    </select>
+    <button class="primary" id="analyzeBtn">Analyze</button>
+    <button class="ghost" id="refreshBtn">↻ Refresh</button>
+    <button class="ghost" id="paperBuyBtn">Paper Buy</button>
+    <div class="fx-mini"><span>USD/THB</span><b id="fxRateTop">—</b></div>
   </section>
 
-  <section class="hero">
-    <div class="panel price-panel">
-      <div class="quote-head">
-        <div class="symbol"><h2 id="symbolTitle">AAPL</h2><p id="symbolMeta">Apple · NASDAQ</p></div>
-        <div class="price-wrap"><div class="price" id="lastPrice">—</div><div class="chg" id="change">—</div></div>
+  <nav class="tabs panel" id="tabs">
+    <button class="tab active" data-tab="decision">Decision</button>
+    <button class="tab" data-tab="charts">Charts</button>
+    <button class="tab" data-tab="intelligence">Intelligence</button>
+    <button class="tab" data-tab="scanner">Scanner</button>
+    <button class="tab" data-tab="portfolio">Portfolio</button>
+    <button class="tab" data-tab="lab">Backtest & Journal</button>
+  </nav>
+
+  <main>
+    <section class="tabpage active" id="tab-decision">
+      <div class="decision-grid">
+        <article class="panel action-board">
+          <div class="eyebrow">ACTION BOARD</div>
+          <div class="action-head">
+            <div>
+              <div class="symbol-line"><h2 id="symbolTitle">AAPL</h2><span id="marketBadge">NASDAQ · USD</span></div>
+              <div class="price-line"><b id="lastPrice">—</b><span id="change">—</span></div>
+            </div>
+            <div class="confidence-ring" id="confidenceRing"><b id="confidence">—</b><span>CONF</span></div>
+          </div>
+          <div class="action-pill neutral" id="actionPill">กำลังวิเคราะห์…</div>
+          <p class="action-copy" id="actionCopy">ระบบกำลังตรวจ Trend, Momentum, Volume, Risk/Reward และ Multi-Timeframe</p>
+          <div class="answer4">
+            <div><span id="whyLabel">ทำไม</span><b id="whyNow">—</b></div>
+            <div><span id="invalidLabel">จุดที่คำแนะนำนี้ผิด</span><b id="invalidation">—</b></div>
+            <div><span id="sizeLabel">ซื้อได้ประมาณ</span><b id="quickSize">—</b></div>
+            <div><span id="waitLabel">ต้องรออะไรต่อ</span><b id="waitFor">—</b></div>
+          </div>
+        </article>
+
+        <article class="panel score-board">
+          <div class="section-title"><div><span class="eyebrow">DECISION QUALITY</span><h3 id="scoreTitle">คะแนนตัดสินใจ</h3></div><b class="big-score" id="opportunityScore">—</b></div>
+          <div class="score-grid">
+            <div><span>Technical</span><b id="technicalScore">—</b><i><em id="barTech"></em></i></div>
+            <div><span>Entry Quality</span><b id="entryScore">—</b><i><em id="barEntry"></em></i></div>
+            <div><span>Risk / Reward</span><b id="rrScore">—</b><i><em id="barRR"></em></i></div>
+            <div><span>Fundamental</span><b id="fundScore">—</b><i><em id="barFund"></em></i></div>
+          </div>
+          <div class="conflicts"><span id="conflictTitle">Signal conflicts</span><div id="conflictList"></div></div>
+        </article>
       </div>
-      <div class="mini-grid">
-        <div class="mini"><span>EMA 20</span><b id="mE20">—</b></div><div class="mini"><span>EMA 50</span><b id="mE50">—</b></div><div class="mini"><span>RSI 14</span><b id="mRsi">—</b></div><div class="mini"><span>MACD</span><b id="mMacd">—</b></div><div class="mini"><span>ATR 14</span><b id="mAtr">—</b></div>
+
+      <div class="three-col">
+        <article class="panel">
+          <div class="section-title"><h3 id="mtfTitle">Multi-Timeframe Consensus</h3><span id="consensusBadge" class="badge">—</span></div>
+          <div id="mtfGrid" class="mtf-grid"></div>
+        </article>
+        <article class="panel">
+          <div class="section-title"><h3 id="scenarioTitle">Scenario Engine</h3><span class="badge">IF → THEN</span></div>
+          <div id="scenarioList" class="scenario-list"></div>
+        </article>
+        <article class="panel">
+          <div class="section-title"><h3 id="riskTitle">Smart Position Sizing</h3><span class="badge" id="rrBadge">R:R —</span></div>
+          <div class="capital-row"><label id="capitalLabel">เงินลงทุนทั้งหมด</label><input id="capital" type="number" min="1000" step="1000" value="100000"><span>THB</span></div>
+          <div id="sizeModes" class="size-modes"></div>
+          <div class="small" id="sizeMethod">คำนวณจาก stop distance, risk budget และ max allocation</div>
+        </article>
       </div>
-    </div>
-    <div class="panel decision">
-      <div>
-        <div class="decision-top"><div><h3 id="decisionLabel">ควรทำอะไรต่อ?</h3><div class="signal" id="signal">กำลังวิเคราะห์…</div></div><div class="score" id="score">—</div></div>
-        <p class="decision-text" id="decisionText">ระบบกำลังดู Trend, Momentum, RSI, MACD, Volume, แนวรับและแนวต้านให้โดยอัตโนมัติ</p>
+
+      <div class="two-col">
+        <article class="panel">
+          <div class="section-title"><h3 id="planTitle">Scale-In / Scale-Out Plan</h3><span class="badge">AUTO</span></div>
+          <div id="scalePlan" class="timeline"></div>
+        </article>
+        <article class="panel">
+          <div class="section-title"><h3 id="eventTitle">Event & Risk Warning</h3><span id="eventBadge" class="badge">LIVE</span></div>
+          <div id="eventWarnings" class="warning-list"></div>
+        </article>
       </div>
-      <div class="next"><b id="nextTitle">ขั้นตอนถัดไป</b><p id="nextText">รอข้อมูลตลาด</p></div>
-    </div>
-  </section>
+    </section>
 
-  <section class="chart-grid">
-    <div class="charts">
-      <div class="panel chart-card">
-        <div class="chart-title"><span id="mainChartTitle">กราฟราคา + EMA + Bollinger + แนวรับ/แนวต้าน + Entry/Stop/TP</span><div class="legend"><span class="lg"><i class="sw ema20"></i>EMA20</span><span class="lg"><i class="sw ema50"></i>EMA50</span><span class="lg"><i class="sw bb"></i>Bollinger</span><span class="lg"><i class="sw sr"></i>S/R</span></div></div>
-        <div class="chart-wrap"><div id="priceChart"></div><div id="loader" class="loader"><div class="spin"></div></div></div>
+    <section class="tabpage" id="tab-charts">
+      <div class="chart-layout">
+        <div class="chart-stack">
+          <article class="panel chart-card">
+            <div class="section-title"><h3 id="priceChartTitle">ราคา + EMA + Bollinger + VWAP + Fibonacci + S/R + Entry/Stop/TP</h3><div id="chartLegend" class="legend"></div></div>
+            <div id="priceChart" class="price-chart"></div>
+          </article>
+          <div class="two-col equal">
+            <article class="panel chart-card"><div class="section-title"><h3>RSI 14</h3><span id="rsiState" class="badge">—</span></div><div id="rsiChart" class="osc-chart"></div></article>
+            <article class="panel chart-card"><div class="section-title"><h3>MACD 12/26/9</h3><span id="macdState" class="badge">—</span></div><div id="macdChart" class="osc-chart"></div></article>
+          </div>
+        </div>
+        <aside class="chart-side">
+          <article class="panel"><div class="section-title"><h3 id="levelsTitle">Automatic Levels</h3></div><div id="levels" class="level-list"></div></article>
+          <article class="panel"><div class="section-title"><h3 id="patternTitle">Patterns & Context</h3></div><div id="patternList" class="tag-list"></div></article>
+          <article class="panel"><div class="section-title"><h3 id="trailTitle">Trailing Stop</h3></div><div id="trailStops" class="level-list"></div></article>
+        </aside>
       </div>
-      <div class="panel chart-card"><div class="chart-title"><span>RSI 14 · Oversold 30 / Overbought 70</span><span id="rsiState">—</span></div><div id="rsiChart" class="osc"></div></div>
-      <div class="panel chart-card"><div class="chart-title"><span>MACD 12/26/9</span><span id="macdState">—</span></div><div id="macdChart" class="osc"></div></div>
-    </div>
+    </section>
 
-    <aside class="sidebar">
-      <div class="panel side-card"><h3 id="planTitle">แผนราคาอัตโนมัติ</h3><div class="levels">
-        <div class="level"><span>แนวรับ</span><b id="support">—</b></div><div class="level"><span>แนวต้าน</span><b id="resistance">—</b></div>
-        <div class="level"><span>จุดเข้า</span><b id="entry">—</b></div><div class="level"><span>Stop</span><b id="stop">—</b></div>
-        <div class="level"><span>Take Profit 1</span><b id="tp1">—</b></div><div class="level"><span>Take Profit 2</span><b id="tp2">—</b></div>
-      </div></div>
+    <section class="tabpage" id="tab-intelligence">
+      <div class="three-col">
+        <article class="panel"><div class="section-title"><h3 id="regimeTitle">Market Regime</h3><span id="regimeBadge" class="badge">—</span></div><div id="regimeBody" class="metric-body"></div></article>
+        <article class="panel"><div class="section-title"><h3 id="relativeTitle">Relative Strength</h3><span class="badge">vs SPY / QQQ</span></div><div id="relativeBody" class="metric-body"></div></article>
+        <article class="panel"><div class="section-title"><h3 id="fundamentalTitle">Fundamental Score</h3><span id="fundBadge" class="badge">—</span></div><div id="fundamentalBody" class="metric-body"></div></article>
+      </div>
+      <div class="two-col">
+        <article class="panel"><div class="section-title"><h3 id="newsTitle">News Impact AI</h3><button class="ghost tiny" id="explainMoveBtn">Why did price move?</button></div><div id="newsList" class="news-list"></div></article>
+        <article class="panel"><div class="section-title"><h3 id="moveTitle">Why did price move?</h3><span class="badge">EXPLAINER</span></div><div id="moveExplain" class="explain-box">กดปุ่มเพื่อสรุป Price action + Volume + News + Market</div></article>
+      </div>
+      <article class="panel"><div class="section-title"><h3 id="heatmapTitle">US Market / Sector Heatmap</h3><span class="badge">SPY · QQQ · Sector ETFs</span></div><div id="heatmap" class="heatmap"></div></article>
+    </section>
 
-      <div class="panel side-card"><h3 id="whyTitle">ทำไมระบบถึงแนะนำแบบนี้</h3><div class="reason-list" id="reasons"></div></div>
+    <section class="tabpage" id="tab-scanner">
+      <div class="scanner-top panel">
+        <div><span class="eyebrow">OPPORTUNITY SCANNER</span><h3 id="scannerTitle">ค้นหา setup ที่ใกล้เกิด action</h3></div>
+        <div class="scanner-controls"><select id="scannerMode" class="control compact"><option value="buy">Top Buy Setups</option><option value="breakout">Near Breakout</option><option value="oversold">Oversold Reversal</option><option value="momentum">Strong Momentum</option><option value="avoid">High Risk Avoid</option></select><button id="scanBtn" class="primary">Scan</button></div>
+      </div>
+      <article class="panel"><div class="section-title"><h3 id="smartWatchTitle">Smart Watchlist</h3><span class="badge">AUTO RANK</span></div><div id="scannerTable" class="table-wrap"></div></article>
+      <article class="panel"><div class="section-title"><h3 id="alertTitle">Smart Alerts (ขณะเปิด App)</h3><button id="enableNotify" class="ghost tiny">Enable browser alerts</button></div><div class="alert-builder"><input id="alertText" class="control" placeholder="เช่น แจ้งเมื่อ AAPL กลับมาเป็น BUY setup"><button id="addAlert" class="primary">Add Alert</button></div><div id="alerts" class="alert-list"></div></article>
+    </section>
 
-      <div class="panel side-card"><h3 id="fxTitle">USD ↔ THB</h3><div class="fxbox"><div class="fx"><span>1 USD</span><b id="fxRate">— THB</b></div><div class="fx"><span id="positionFxLabel">มูลค่าหุ้นแนะนำ</span><b id="positionFx">—</b></div></div><div class="smallnote" id="fxSource">กำลังโหลดอัตราแลกเปลี่ยน…</div></div>
+    <section class="tabpage" id="tab-portfolio">
+      <div class="portfolio-grid">
+        <article class="panel"><div class="section-title"><h3 id="portfolioTitle">Portfolio AI</h3><button id="addHolding" class="ghost tiny">+ Add</button></div><div id="holdings" class="holding-list"></div><div id="portfolioSummary" class="portfolio-summary"></div></article>
+        <article class="panel"><div class="section-title"><h3 id="stressTitle">Portfolio Stress Test</h3><span class="badge">THB</span></div><div id="stressBars" class="stress-bars"></div><div id="stressNotes" class="small"></div></article>
+      </div>
+      <div class="two-col">
+        <article class="panel"><div class="section-title"><h3 id="corrTitle">Concentration & Correlation</h3></div><div id="corrBody" class="metric-body"></div></article>
+        <article class="panel"><div class="section-title"><h3 id="thbReturnTitle">THB Real Return</h3></div><div id="thbReturnBody" class="metric-body"></div></article>
+      </div>
+    </section>
 
-      <div class="panel side-card"><h3 id="sizeTitle">ควรซื้อกี่หุ้น?</h3><div class="calc">
-        <div class="field"><label id="capitalLabel">เงินลงทุนทั้งหมด (THB)</label><input id="capital" type="number" min="1000" step="1000" value="100000" /></div>
-        <div class="row2"><div class="field"><label id="riskLabel">เสี่ยงต่อดีล (%)</label><input id="riskPct" type="number" min="0.1" max="5" step="0.1" value="1" /></div><div class="field"><label id="allocLabel">ใช้เงินสูงสุด (%)</label><input id="allocPct" type="number" min="5" max="100" step="5" value="25" /></div></div>
-        <div class="position-result"><div class="position-big" id="shares">— หุ้น</div><div class="position-sub" id="positionDetail">ระบบจะจำกัดทั้ง “ความเสี่ยงจาก Stop” และ “สัดส่วนเงินลงทุนสูงสุด” แล้วเลือกจำนวนที่ต่ำกว่า</div><div class="allocation"><div id="allocBar"></div></div></div>
-      </div><div class="smallnote" id="sizeNote">ค่าเริ่มต้น 1% risk / 25% allocation เป็นตัวอย่างเพื่อช่วยจัดการความเสี่ยง คุณเปลี่ยนได้ตามแผนของคุณ</div></div>
-    </aside>
-  </section>
-  <div class="foot" id="disclaimer">สัญญาณทั้งหมดเป็นระบบวิเคราะห์เชิงเทคนิคเพื่อช่วยตัดสินใจ ไม่ใช่การรับประกันผลตอบแทนหรือคำสั่งซื้อขายเฉพาะบุคคล ข้อมูล Yahoo Finance อาจเป็น near-real-time หรือมี delay ตามตลาด/สิทธิ์ข้อมูล</div>
-</main>
+    <section class="tabpage" id="tab-lab">
+      <div class="three-col">
+        <article class="panel"><div class="section-title"><h3 id="backtestTitle">Strategy Backtest</h3><button id="runBacktest" class="primary tiny">Run 2Y</button></div><div id="backtestBody" class="metric-body"></div></article>
+        <article class="panel"><div class="section-title"><h3 id="trackTitle">Signal Track Record</h3></div><div id="trackBody" class="metric-body"></div></article>
+        <article class="panel"><div class="section-title"><h3 id="paperTitle">Paper Trading</h3></div><div id="paperSummary" class="metric-body"></div></article>
+      </div>
+      <div class="two-col">
+        <article class="panel"><div class="section-title"><h3 id="paperTradesTitle">Paper Positions</h3></div><div id="paperTrades" class="table-wrap"></div></article>
+        <article class="panel"><div class="section-title"><h3 id="journalTitle">Trade Journal AI</h3></div><div id="journalInsight" class="explain-box"></div><div id="journalTable" class="table-wrap"></div></article>
+      </div>
+    </section>
+  </main>
+
+  <footer id="disclaimer">Decision-support only. ไม่ใช่คำรับรองผลตอบแทนหรือคำแนะนำการลงทุนเฉพาะบุคคล ข้อมูล public feed อาจมี delay; ตรวจสอบกับ broker ก่อนส่งคำสั่งจริง</footer>
+</div>
+
+<div id="modal" class="modal hidden"><div class="modal-card"><button id="modalClose" class="modal-close">×</button><div id="modalBody"></div></div></div>
+<div id="toast" class="toast"></div>
 <script src="/app.js"></script>
-</body></html>
+</body>
+</html>

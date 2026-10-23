@@ -88,8 +88,10 @@ function draw(chart){
   ctx.fillStyle=text;ctx.font='10px system-ui';ctx.textAlign='center';ctx.textBaseline='top';const marks=[0,Math.floor((times.length-1)/2),times.length-1];for(const i of marks){const t=times[i];if(t!=null)ctx.fillText(timeLabel(t),x(t),H-pad.b+7)}
   ctx.textAlign='left';ctx.fillStyle=text;ctx.globalAlpha=.72;ctx.font='9px system-ui';ctx.fillText(document.documentElement.lang==='th'?'เลื่อนเมาส์: ซูม · ลาก: ขยับ · ดับเบิลคลิก: รีเซ็ต':'Wheel: zoom · Drag: pan · Double-click: reset',pad.l+4,H-8);ctx.globalAlpha=1;
 }
-window.__TensaiNativeLightweightCharts=window.LightweightCharts||null;window.LightweightCharts={CrosshairMode:{Normal:0},createChart};window.__TensaiChartEngine='canvas-interactive-v2';
+window.__TensaiNativeLightweightCharts=window.LightweightCharts||null;window.LightweightCharts={CrosshairMode:{Normal:0},createChart};window.__TensaiChartEngine='canvas-interactive-v3';
 window.addEventListener('resize',()=>charts.forEach(schedule));document.addEventListener('click',e=>{if(e.target?.closest?.('.tab'))setTimeout(()=>charts.forEach(schedule),50)});document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>charts.forEach(schedule),50)});
-function injectLang(){if(document.querySelector('script[data-tensai-lang-patch]'))return;const s=document.createElement('script');s.src='/lang-patch.js?v=2';s.dataset.tensaiLangPatch='1';document.head.appendChild(s)}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',injectLang,{once:true});else injectLang();
+function injectLang(){if(document.querySelector('script[data-tensai-lang-patch]'))return;const s=document.createElement('script');s.src='/lang-patch.js?v=3';s.dataset.tensaiLangPatch='1';document.head.appendChild(s)}
+function injectV5(){if(document.querySelector('script[data-tensai-v5-bootstrap]'))return;const s=document.createElement('script');s.src='/v5-bootstrap.js?v=5.3.0';s.dataset.tensaiV5Bootstrap='1';document.head.appendChild(s)}
+function bootShell(){injectLang();injectV5()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootShell,{once:true});else bootShell();
 })();

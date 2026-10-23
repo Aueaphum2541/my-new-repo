@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/intraday",
+      "destination": "/api/sec?mode=intraday"
+    }
+  ]
+}

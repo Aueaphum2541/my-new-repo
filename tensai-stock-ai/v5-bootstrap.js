@@ -41,7 +41,7 @@ async function boot(){
     await load(`/v5-patch.js?v=${VERSION}`,'data-tensai-v5');
     await load(`/v5-advanced.js?v=${VERSION}`,'data-tensai-v5-advanced');
     await load(`/v5-hotfix.js?v=${VERSION}`,'data-tensai-v5-hotfix');
-    await load(`/v5-functional.js?v=${VERSION}`,'data-tensai-v5-functional');
+    await load(`/v5-core.js?v=${VERSION}`,'data-tensai-v5-core');
   }catch(e){console.error('Tensai V5 bootstrap load failed',e)}
   let n=0;const t=setInterval(()=>{n++;if(activateV5()||n>100)clearInterval(t)},100);
 }

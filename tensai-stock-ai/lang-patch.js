@@ -29,7 +29,8 @@ function applyFullLang(lang){
  window.__tensaiCharts?.forEach(c=>c.render?.());
 }
 window.__applyTensaiFullLanguage=applyFullLang;
-function loadV5(){if(document.querySelector('script[data-tensai-v5]'))return;const s=document.createElement('script');s.src='/v5-patch.js?v=5.0.1';s.dataset.tensaiV5='1';document.head.appendChild(s)}
+function loadAdvanced(){if(document.querySelector('script[data-tensai-v5-advanced]'))return;const a=document.createElement('script');a.src='/v5-advanced.js?v=5.1.0';a.dataset.tensaiV5Advanced='1';document.head.appendChild(a)}
+function loadV5(){const old=document.querySelector('script[data-tensai-v5]');if(old){setTimeout(loadAdvanced,80);return}const s=document.createElement('script');s.src='/v5-patch.js?v=5.0.2';s.dataset.tensaiV5='1';s.onload=loadAdvanced;document.head.appendChild(s)}
 let booted=false;
 function boot(){if(booted)return;booted=true;
  setTimeout(()=>{let lang='th';try{lang=JSON.parse(localStorage.getItem('tensai-lang'))||'th'}catch{};applyFullLang(lang)},120);

@@ -4,10 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#08111f" />
-  <title>Tensai AI Trading Decision Terminal V4</title>
-  <meta name="description" content="US stock decision-support terminal with multi-timeframe analysis, risk sizing, portfolio analytics, scanner, paper trading and THB returns." />
-  <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
-  <link rel="stylesheet" href="/styles.css" />
+  <title>Tensai AI Market Command Center V5</title>
+  <meta name="description" content="Tensai AI Market Command Center V5 for US stock decision support, market breadth, multi-timeframe analysis, risk sizing, portfolio intelligence, options context, replay and THB returns." />
+  <link rel="stylesheet" href="/styles.css?v=5.3.0" />
 </head>
 <body>
 <div class="app-shell">
@@ -15,8 +14,8 @@
     <div class="brand">
       <div class="logo">T</div>
       <div>
-        <h1>Tensai AI Trading Decision Terminal <span>V4</span></h1>
-        <p id="subtitle">สรุปสิ่งที่ควรทำต่อจากราคา แนวโน้ม ความเสี่ยง ข่าว และพอร์ตในหน้าจอเดียว</p>
+        <h1>Tensai AI Market Command Center <span>V5</span></h1>
+        <p id="subtitle">ศูนย์บัญชาการตลาด: สรุปสิ่งที่ควรทำ ความเสี่ยง ภาวะตลาด และหลักฐานในหน้าจอเดียว</p>
       </div>
     </div>
     <div class="top-actions">
@@ -183,7 +182,9 @@
 
 <div id="modal" class="modal hidden"><div class="modal-card"><button id="modalClose" class="modal-close">×</button><div id="modalBody"></div></div></div>
 <div id="toast" class="toast"></div>
-<script src="/chart-shim.js?v=1"></script>
-<script src="/app.js?v=4.1"></script>
+<script src="/chart-shim.js?v=3"></script>
+<script src="/app.js?v=4.2"></script>
+<script data-tensai-lang-patch="1" src="/lang-patch.js?v=3"></script>
+<script data-tensai-v5-bootstrap="1" src="/v5-bootstrap.js?v=5.3.0"></script>
 </body>
 </html>
